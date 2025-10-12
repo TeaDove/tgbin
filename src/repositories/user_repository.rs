@@ -1,4 +1,4 @@
-use redb::{Database, DatabaseError, Error, ReadableDatabase, ReadableTable, TableDefinition};
+use redb::{Database, Error, ReadableDatabase, TableDefinition};
 
 const TABLE: TableDefinition<&str, u64> = TableDefinition::new("user");
 
@@ -23,7 +23,8 @@ impl UserRepository {
         Ok(())
     }
 
-    pub fn get_user_id(&self, username: String) -> Result<Option<u64>, Error> {
+    // TODO remove old unused usernames
+    pub fn get_user_id(&self, username: &String) -> Result<Option<u64>, Error> {
         let read_txn = self.db.begin_read()?;
         let table = read_txn.open_table(TABLE)?;
 
@@ -43,6 +44,6 @@ mod tests{
         let user_repository = UserRepository::new(Database::create("/tmp/test.redb").unwrap());
 
         user_repository.insert_username(&"teadove".to_string(), 42 ).unwrap();
-        assert_eq!(Some(42), user_repository.get_user_id("teadove".to_string()).unwrap());
+        assert_eq!(Some(42), user_repository.get_user_id(&"teadove".to_string()).unwrap());
     }
 }

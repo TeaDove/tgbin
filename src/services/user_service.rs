@@ -20,4 +20,11 @@ impl UserService{
         log::info!("username.saved {}", username);
         Ok(())
     }
+
+    pub async fn get_user_id(&self, username: &String) -> Result<Option<u64>, String>{
+        match self.user_repository.get_user_id(username){
+            Ok(user_id) => Ok(user_id),
+            Err(err) => return Err(String::from(format!("failed to get user: {}", err.to_string()))),
+        }
+    }
 }
