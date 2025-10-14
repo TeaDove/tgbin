@@ -1,5 +1,4 @@
 use std::sync::Arc;
-use redb::Error;
 use crate::repositories::user_repository::UserRepository;
 
 pub struct UserService{

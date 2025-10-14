@@ -6,32 +6,34 @@ use axum::{
 
 };
 use axum::extract::State;
-use serde::{Deserialize, Serialize};
 use crate::services::paste_service;
+use crate::services::paste_service::PasteTextRequest;
 
-pub async fn build_and_run(paste_service: Arc<paste_service::PasteService>) {
+#[derive(Clone)]
+struct AppState {
+    paste_service: Arc<paste_service::PasteService>
+}
+
+pub async fn build_and_run(paste_service: Arc<paste_service::PasteService>, url: &String) {
+    let state = AppState{paste_service};
+
     let app = Router::new()
         .route("/paste/text", post(paste_text))
-        .with_state(paste_service);
+        .with_state(state);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap(); // TODO move to settings
+    let listener = tokio::net::TcpListener::bind(url).await.unwrap(); // TODO move to settings
 
     log::info!("listening.on {}", listener.local_addr().unwrap());
     axum::serve(listener, app).await.unwrap();
 }
 
 
-#[derive(Deserialize, Serialize)]
-struct PasteTextRequest {
-    text: String,
-    user: String,
-}
 
 async fn paste_text(
+    State(state): State<AppState>,
     Json(payload): Json<PasteTextRequest>,
-    State(paste_service): State<Arc<paste_service::PasteService>>,
 ) -> (StatusCode, String){
-    match paste_service.paste_text(payload.text, &payload.user).await{
+    match state.paste_service.paste_text(&payload).await{
         Ok(_) => (StatusCode::OK, "OK".to_string()),
         Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, format!("something went wrong: {}", err)),
     }

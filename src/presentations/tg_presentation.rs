@@ -1,11 +1,8 @@
 use std::sync::Arc;
 use teloxide::prelude::*;
-use teloxide::RequestError;
 use crate::services::user_service::UserService;
 
-pub async fn build_and_run(user_service: Arc<UserService>){
-    let bot = Bot::from_env();
-
+pub async fn build_and_run(user_service: Arc<UserService>, bot: Bot) {
     let handler = Update::filter_message().endpoint(
         |bot: Bot, user_service: Arc<UserService>, msg: Message| async move {
             let from = match msg.from {
@@ -15,7 +12,7 @@ pub async fn build_and_run(user_service: Arc<UserService>){
 
             let username = match from.clone().username{
                 None => return respond(()),
-                Some(x) => x
+                Some(x) => x.to_lowercase()
             };
 
             let res = user_service.save_username(username, from.id.0).await;
