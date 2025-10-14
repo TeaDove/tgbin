@@ -1,0 +1,11 @@
+services:
+  backend:
+    restart: always
+    build:
+      context: ..
+    volumes:
+      - ".env.yaml:/.env.yaml"
+      - ".env.default.yaml:/.env.default.yaml"
+      - ".data:/.data"
+    environment:
+      RUST_LOG: info

@@ -18,10 +18,10 @@ pub async fn build_and_run(paste_service: Arc<paste_service::PasteService>, url:
     let state = AppState{paste_service};
 
     let app = Router::new()
-        .route("/paste/text", post(paste_text))
+        .route("/api/paste/text", post(paste_text))
         .with_state(state);
 
-    let listener = tokio::net::TcpListener::bind(url).await.unwrap(); // TODO move to settings
+    let listener = tokio::net::TcpListener::bind(url).await.unwrap();
 
     log::info!("listening.on {}", listener.local_addr().unwrap());
     axum::serve(listener, app).await.unwrap();
