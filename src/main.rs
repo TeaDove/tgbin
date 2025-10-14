@@ -14,7 +14,7 @@ async fn main() {
 
     let settings = settings::Settings::must_new();
 
-    let bot = Bot::new(settings.tg_token);
+    let bot = Bot::new(settings.tg_token.trim());
 
     let db = Database::create(settings.db_path).unwrap();
     let user_service = Arc::new(UserService::new(Arc::new(UserRepository::new(db))));

@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use config::{Config, Environment, File};
 
-#[derive(Debug, Deserialize, Default)]
+#[derive(Debug, Deserialize)]
 #[allow(unused)]
 pub struct Settings {
     pub url: String,
@@ -11,7 +11,9 @@ pub struct Settings {
 
 impl Settings {
     pub fn must_new() -> Self {
+
         let s = Config::builder()
+            .add_source(File::with_name(".env.default.yaml"))
             .add_source(File::with_name(".env.yaml"))
             .add_source(Environment::with_prefix("APP_")).
             build().unwrap();

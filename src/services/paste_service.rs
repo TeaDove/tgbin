@@ -10,6 +10,7 @@ pub struct PasteService {
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PasteTextRequest{
     pub text: String,
     pub user: String,
@@ -32,7 +33,7 @@ impl PasteService {
             }
         };
 
-        let texts = PasteService::make_text_msgs(&req.user, req.with_code);
+        let texts = PasteService::make_text_msgs(&req.text, req.with_code);
         for text in texts {
             match self.tg_bot.send_message(ChatId(user_id as i64), text).parse_mode(teloxide::types::ParseMode::Html).await{
                 Ok(_) => {},
