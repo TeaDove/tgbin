@@ -2,7 +2,7 @@ services:
   backend:
     restart: always
     build:
-      context: ..
+      context: backend
     volumes:
       - ".env.yaml:/.env.yaml"
       - ".env.default.yaml:/.env.default.yaml"

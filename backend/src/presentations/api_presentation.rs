@@ -8,6 +8,7 @@ use axum::{
 use axum::extract::State;
 use crate::services::paste_service;
 use crate::services::paste_service::PasteTextRequest;
+use tower_http::cors::{Any, CorsLayer};
 
 #[derive(Clone)]
 struct AppState {
@@ -19,6 +20,7 @@ pub async fn build_and_run(paste_service: Arc<paste_service::PasteService>, url:
 
     let app = Router::new()
         .route("/api/paste/text", post(paste_text))
+        .layer(CorsLayer::permissive())
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind(url).await.unwrap();
@@ -26,8 +28,6 @@ pub async fn build_and_run(paste_service: Arc<paste_service::PasteService>, url:
     log::info!("listening.on {}", listener.local_addr().unwrap());
     axum::serve(listener, app).await.unwrap();
 }
-
-
 
 async fn paste_text(
     State(state): State<AppState>,
