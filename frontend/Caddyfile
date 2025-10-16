@@ -1,5 +1,9 @@
 {
     auto_https off
+
+    log {
+        format console
+    }
 }
 
 :80 {

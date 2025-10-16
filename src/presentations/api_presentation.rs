@@ -8,7 +8,7 @@ use axum::{
 use axum::extract::State;
 use crate::services::paste_service;
 use crate::services::paste_service::PasteTextRequest;
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::cors::{CorsLayer};
 
 #[derive(Clone)]
 struct AppState {

@@ -5,7 +5,7 @@ import { config } from './config';
 function App() {
   const handlePasteText = async () => {
     try {
-      const response = await fetch(`${config.url}/api/paste/text`, {
+      const response = await fetch(`${config.url}/paste/text`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
