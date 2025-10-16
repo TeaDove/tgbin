@@ -1,13 +1,19 @@
 use std::sync::Arc;
-use axum::{
-    routing::{post},
-    Json, Router,
-    http::StatusCode,
-
-};
+use std::time::Duration;
+use axum::{routing::{post}, Json, Router, http::StatusCode, response, BoxError};
+use axum::error_handling::HandleErrorLayer;
 use axum::extract::State;
+use axum::{
+    routing::get,
+    extract::{Request},
+    middleware::{self, Next},
+    response::Response,
+};
+use axum::response::ErrorResponse;
+use log::error;
 use crate::services::paste_service;
 use crate::services::paste_service::PasteTextRequest;
+use tower::{ServiceBuilder, timeout::TimeoutLayer};
 use tower_http::cors::{CorsLayer};
 
 #[derive(Clone)]
@@ -20,7 +26,11 @@ pub async fn build_and_run(paste_service: Arc<paste_service::PasteService>, url:
 
     let app = Router::new()
         .route("/api/paste/text", post(paste_text))
+        .route("/api", post(paste_text_default))
         .layer(CorsLayer::permissive())
+        .layer(
+            ServiceBuilder::new()
+                .layer(middleware::from_fn(my_logging_middleware)))
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind(url).await.unwrap();
@@ -29,12 +39,38 @@ pub async fn build_and_run(paste_service: Arc<paste_service::PasteService>, url:
     axum::serve(listener, app).await.unwrap();
 }
 
+async fn paste_text_default(
+    State(state): State<AppState>,
+    body: String,
+) -> response::Result<& 'static str>{
+    let payload = PasteTextRequest{text: body, user: "@TeaDove".to_string(), with_code: true};
+
+    state.paste_service.paste_text(&payload).await?;
+
+    Ok("OK")
+}
+
 async fn paste_text(
     State(state): State<AppState>,
     Json(payload): Json<PasteTextRequest>,
-) -> (StatusCode, String){
-    match state.paste_service.paste_text(&payload).await{
-        Ok(_) => (StatusCode::OK, "OK".to_string()),
-        Err(err) => (StatusCode::INTERNAL_SERVER_ERROR, format!("something went wrong: {}", err)),
-    }
+) -> response::Result<& 'static str>{
+    state.paste_service.paste_text(&payload).await?;
+
+    Ok("OK")
+}
+
+
+async fn my_logging_middleware(
+    request: Request,
+    next: Next,
+) -> Result<Response, StatusCode> {
+    // Log something before the request is processed by the handler
+    let method = request.method().clone();
+    let uri = request.uri().clone();
+
+    let response = next.run(request).await;
+
+    log::info!("request.processed {} {} {}", method, uri, response.status());
+
+    Ok(response)
 }
