@@ -21,7 +21,7 @@ pub async fn build_and_run(paste_service: Arc<paste_service::PasteService>, url:
 
     let app = Router::new()
         .route("/api/paste/text", post(paste_text))
-        .route("/api", post(paste_text_default))
+        .route("/api/", post(paste_text_default))
         .layer(CorsLayer::permissive())
         .layer(
             ServiceBuilder::new()
