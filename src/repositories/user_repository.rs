@@ -1,4 +1,4 @@
-use redb::{Database, Error, ReadableDatabase, TableDefinition};
+use redb::{Database, ReadableDatabase, TableDefinition};
 
 const TABLE: TableDefinition<&str, u64> = TableDefinition::new("user");
 
@@ -12,7 +12,7 @@ impl UserRepository {
         Self{db}
     }
 
-    pub fn insert_username(&self, username: &String, user_id: u64) -> Result<(), Error> {
+    pub fn insert_username(&self, username: &String, user_id: u64) -> anyhow::Result<()>{
         let write_txn = self.db.begin_write()?;
         {
             let mut table = write_txn.open_table(TABLE)?;
@@ -24,7 +24,7 @@ impl UserRepository {
     }
 
     // TODO remove old unused usernames
-    pub fn get_user_id(&self, username: &String) -> Result<Option<u64>, Error> {
+    pub fn get_user_id(&self, username: &String) -> anyhow::Result<Option<u64>> {
         let read_txn = self.db.begin_read()?;
         let table = read_txn.open_table(TABLE)?;
 

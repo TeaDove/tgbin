@@ -1,12 +1,12 @@
 {
-    # auto_https off
+    auto_https off
 
     log {
         format console
     }
 }
 
-kodiki-hack.ru:8082 {
+http://kodiki-hack.ru:8082 {
     route /api/* {
         reverse_proxy backend:8080
     }

@@ -1,19 +1,14 @@
 use std::sync::Arc;
-use std::time::Duration;
-use axum::{routing::{post}, Json, Router, http::StatusCode, response, BoxError};
-use axum::error_handling::HandleErrorLayer;
+use axum::{routing::{post}, Json, Router, http::StatusCode};
 use axum::extract::State;
 use axum::{
-    routing::get,
     extract::{Request},
     middleware::{self, Next},
     response::Response,
 };
-use axum::response::ErrorResponse;
-use log::error;
 use crate::services::paste_service;
 use crate::services::paste_service::PasteTextRequest;
-use tower::{ServiceBuilder, timeout::TimeoutLayer};
+use tower::{ServiceBuilder};
 use tower_http::cors::{CorsLayer};
 
 #[derive(Clone)]
@@ -30,7 +25,7 @@ pub async fn build_and_run(paste_service: Arc<paste_service::PasteService>, url:
         .layer(CorsLayer::permissive())
         .layer(
             ServiceBuilder::new()
-                .layer(middleware::from_fn(my_logging_middleware)))
+                .layer(middleware::from_fn(logging_middleware)))
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind(url).await.unwrap();
@@ -42,25 +37,27 @@ pub async fn build_and_run(paste_service: Arc<paste_service::PasteService>, url:
 async fn paste_text_default(
     State(state): State<AppState>,
     body: String,
-) -> response::Result<& 'static str>{
+) -> Result<& 'static str, StatusCode> {
     let payload = PasteTextRequest{text: body, user: "@TeaDove".to_string(), with_code: true};
 
-    state.paste_service.paste_text(&payload).await?;
-
-    Ok("OK")
+    match state.paste_service.paste_text(&payload).await {
+        Ok(_) => Ok("OK"),
+        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+    }
 }
 
 async fn paste_text(
     State(state): State<AppState>,
     Json(payload): Json<PasteTextRequest>,
-) -> response::Result<& 'static str>{
-    state.paste_service.paste_text(&payload).await?;
-
-    Ok("OK")
+) -> Result<& 'static str, StatusCode> {
+    match state.paste_service.paste_text(&payload).await {
+        Ok(_) => Ok("OK"),
+        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+    }
 }
 
 
-async fn my_logging_middleware(
+async fn logging_middleware(
     request: Request,
     next: Next,
 ) -> Result<Response, StatusCode> {

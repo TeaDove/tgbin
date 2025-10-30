@@ -22,23 +22,20 @@ impl PasteService {
         Self {user_service, tg_bot}
     }
 
-    pub async fn paste_text(&self, req: &PasteTextRequest) -> Result<(), String> {
+    pub async fn paste_text(&self, req: &PasteTextRequest) -> anyhow::Result<()> {
         let user = &req.user.to_lowercase().trim_start_matches('@').to_string();
 
         let user_id: u64 = match user.parse(){
             Ok(x) => x,
             Err(_) => match self.user_service.get_user_id(user).await?{
                 Some(x) => x,
-                None => return Err(String::from("user not found, please login first")),
+                None => anyhow::bail!("User does not exist"),
             }
         };
 
         let texts = PasteService::make_text_msgs(&req.text, req.with_code);
         for text in texts {
-            match self.tg_bot.send_message(ChatId(user_id as i64), text).parse_mode(teloxide::types::ParseMode::Html).await{
-                Ok(_) => {},
-                Err(err) => return Err(format!("failed to send pasted text: {}", err.to_string())),
-            };
+            self.tg_bot.send_message(ChatId(user_id as i64), text).parse_mode(teloxide::types::ParseMode::Html).await?;
         }
 
         log::info!("text.pasted: {:?} {:?}", req.user.len(), user);
